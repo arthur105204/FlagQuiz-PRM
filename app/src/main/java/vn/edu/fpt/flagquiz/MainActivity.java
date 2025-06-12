@@ -20,7 +20,10 @@ import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-public class MainActivity extends Activity
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+public class MainActivity extends AppCompatActivity
 {
     // keys for reading data from SharedPreferences
     public static final String CHOICES = "pref_numberOfChoices";
@@ -34,6 +37,16 @@ public class MainActivity extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Set up the toolbar as the ActionBar
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(true);
+            getSupportActionBar().setTitle(R.string.app_name);
+            getSupportActionBar().setLogo(R.mipmap.ic_launcher); // Use your app logo drawable
+            getSupportActionBar().setDisplayUseLogoEnabled(true);
+        }
 
         // set default values in the app's SharedPreferences
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);

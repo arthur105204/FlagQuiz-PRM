@@ -249,6 +249,48 @@ public class QuizFragment extends Fragment
         return name.substring(name.indexOf('-') + 1).replace('_', ' ');
     }
 
+    // Static inner class for quiz results dialog
+    public static class QuizResultsDialogFragment extends DialogFragment {
+        private static final String ARG_TOTAL_GUESSES = "total_guesses";
+
+        public static QuizResultsDialogFragment newInstance(int totalGuesses) {
+            QuizResultsDialogFragment fragment = new QuizResultsDialogFragment();
+            Bundle args = new Bundle();
+            args.putInt(ARG_TOTAL_GUESSES, totalGuesses);
+            fragment.setArguments(args);
+            return fragment;
+        }
+
+        public QuizResultsDialogFragment() {
+            // Required empty public constructor
+        }
+
+        @Override
+        public Dialog onCreateDialog(Bundle bundle) {
+            int totalGuesses = getArguments() != null ? getArguments().getInt(ARG_TOTAL_GUESSES) : 0;
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setCancelable(false);
+            builder.setMessage(
+                    getResources().getString(R.string.results,
+                            totalGuesses, (1000 / (double) totalGuesses)));
+            builder.setPositiveButton(R.string.reset_quiz,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            Fragment parent = getTargetFragment();
+                            if (parent instanceof QuizFragment) {
+                                ((QuizFragment) parent).resetQuiz();
+                            } else if (getActivity() instanceof MainActivity) {
+                                // fallback: try to find the fragment and call resetQuiz
+                                QuizFragment quizFragment = (QuizFragment)
+                                    getActivity().getFragmentManager().findFragmentById(R.id.quizFragment);
+                                if (quizFragment != null) quizFragment.resetQuiz();
+                            }
+                        }
+                    });
+            return builder.create();
+        }
+    }
+
     // called when a guess Button is touched
     private OnClickListener guessButtonListener = new OnClickListener()
     {
@@ -274,39 +316,10 @@ public class QuizFragment extends Fragment
                 // if the user has correctly identified FLAGS_IN_QUIZ flags
                 if (correctAnswers == FLAGS_IN_QUIZ)
                 {
-                    // DialogFragment to display quiz stats and start new quiz
-                    DialogFragment quizResults =
-                            new DialogFragment()
-                            {
-                                // create an AlertDialog and return it
-                                @Override
-                                public Dialog onCreateDialog(Bundle bundle)
-                                {
-                                    AlertDialog.Builder builder =
-                                            new AlertDialog.Builder(getActivity());
-                                    builder.setCancelable(false);
-
-                                    builder.setMessage(
-                                            getResources().getString(R.string.results,
-                                                    totalGuesses, (1000 / (double) totalGuesses)));
-
-                                    // "Reset Quiz" Button
-                                    builder.setPositiveButton(R.string.reset_quiz,
-                                            new DialogInterface.OnClickListener()
-                                            {
-                                                public void onClick(DialogInterface dialog,
-                                                                    int id)
-                                                {
-                                                    resetQuiz();
-                                                }
-                                            } // end anonymous inner class
-                                    ); // end call to setPositiveButton
-
-                                    return builder.create(); // return the AlertDialog
-                                } // end method onCreateDialog
-                            }; // end DialogFragment anonymous inner class
-
-                    // use FragmentManager to display the DialogFragment
+                    // Show static dialog fragment for quiz results
+                    QuizResultsDialogFragment quizResults =
+                            QuizResultsDialogFragment.newInstance(totalGuesses);
+                    quizResults.setTargetFragment(QuizFragment.this, 0);
                     quizResults.show(getFragmentManager(), "quiz results");
                 }
                 else // answer is correct but quiz is not over
